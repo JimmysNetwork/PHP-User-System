@@ -2,20 +2,28 @@
 session_start();
 require_once '../config/database.php';
 require_once '../includes/header.php';
+require_once '../app/helpers/Flash.php';
 
 if (Auth::check()) {
     header('Location: dashboard.php');
     exit;
 }
 
-
 $token = $_GET['token'] ?? '';
 $error = '';
 $success = '';
 
 if (!$token) {
-    die("Invalid or missing token.");
+    echo "<div class='alert alert-danger'>Invalid or missing token.</div>";
+    echo "<a href='forgot.php' class='btn btn-secondary'>Request a New Link</a>";
+    require_once '../includes/footer.php';
+    exit;
 }
+
+// Validate token
+$stmt = $pdo->prepare("SELECT * FROM password_resets WHERE token = ? AND expires_at >= NOW()");
+$stmt->execute([$token]);
+$reset = $stmt->fetch();
 
 if (!$reset) {
     echo "<div class='alert alert-danger'>This reset link is invalid or has expired.</div>";
@@ -24,16 +32,7 @@ if (!$reset) {
     exit;
 }
 
-
-// Validate token
-$stmt = $pdo->prepare("SELECT * FROM password_resets WHERE token = ? AND expires_at >= NOW()");
-$stmt->execute([$token]);
-$reset = $stmt->fetch();
-
-if (!$reset) {
-    die("This reset link is invalid or expired.");
-}
-
+// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $confirm = $_POST['confirm_password'] ?? '';
@@ -53,7 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Delete reset token
         $pdo->prepare("DELETE FROM password_resets WHERE email = ?")->execute([$reset['email']]);
 
-        $success = "Your password has been reset. You may now <a href='login.php'>login</a>.";
+        // Set flash message and redirect to login
+        Flash::set('success', 'Your password has been reset. You can now log in.');
+        header('Location: login.php');
+        exit;
     }
 }
 ?>
@@ -62,11 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <?php if ($error): ?>
     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-<?php elseif ($success): ?>
-    <div class="alert alert-success"><?= $success ?></div>
 <?php endif; ?>
 
-<?php if (!$success): ?>
 <form method="post">
     <div class="mb-3">
         <label>New Password:</label>
@@ -78,6 +77,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <button type="submit" class="btn btn-success">Reset Password</button>
 </form>
-<?php endif; ?>
 
 <?php require_once '../includes/footer.php'; ?>

@@ -13,33 +13,55 @@ A clean, modern PHP user authentication system built using Object-Oriented Progr
 - Secure Logout
 - Password Hashing with `password_hash()`
 - Session-based Authentication
-
-### ✅ CSRF Protection
-
-- CSRF token generation and validation on all forms
-- Blocks unauthorized external form submissions
+- Password Reset via Email (Forgot Password)
+- CSRF Token Protection on all forms
 
 ### ✅ Flash Messaging
 
-- One-time success/error messages displayed after actions like login or registration
-- Built-in helper class for setting and retrieving flash messages
+- One-time success/error messages
+- Displays messages after login, logout, password reset, etc.
+- Flash helper class included
+
+### ✅ User Profile
+
+- Logged-in users can update their:
+  - Username
+  - Email
+  - Password (optional)
+- Input validation and secure update logic
+
+### ✅ Password Reset System
+
+- Forgot Password request form
+- Secure reset token generation and expiry handling
+- Password reset link via email
+- Reset form with confirmation
+- Flash success message on reset
+
+### ✅ CSRF Protection
+
+- Token-based CSRF defense on all user input forms
+- Session-bound random token generation and validation
 
 ### ✅ Role-Based Access Control
 
-- User roles (`user`, `admin`)
-- Admin-only access enforcement for sensitive pages
-- Role detection via session and Auth class
+- Role support: `user`, `admin`
+- Admin-only dashboard access
+- Role checked through session and Auth class
 
 ### ✅ Admin Dashboard
 
-- View all registered users (ID, Username, Email, Role)
-- Protected from non-admin access
-- Extendable with edit/delete functionality
+- View all users (ID, Username, Email, Role)
+- Pagination for user listing
+- Filter/search users by role, email, or username
+- Edit user info and role
+- Delete users (except self)
+- Role-specific navigation
 
 ### ✅ Reusable Layout Includes
 
-- Shared `header.php` and `footer.php` files
-- Dynamic navigation bar (based on login status and role)
+- `header.php` and `footer.php` shared across all pages
+- Flash message and navbar logic in header
 - Bootstrap 5 CDN for styling
 
 ---
@@ -72,4 +94,10 @@ A clean, modern PHP user authentication system built using Object-Oriented Progr
 ## 🛠 Setup Instructions
 
 1. Clone or download this repository.
-2. Set up a database and import the database.sql file.
+2. Set up a database and import the `database.sql` file (or use provided schema).
+3. Update `/config/database.php` with your database credentials.
+4. Start your local server or deploy to a PHP-supported host.
+
+## 📄 License
+
+MIT License — free to use and modify for personal or commercial projects.

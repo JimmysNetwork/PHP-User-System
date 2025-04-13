@@ -23,7 +23,7 @@ $users = $stmt->fetchAll();
 <body class="container mt-5">
     <h1 class="mb-4">Admin Dashboard</h1>
 
-    <p><a href="../dashboard.php">← Back to Dashboard</a> | <p><a href="users/userlist.php" class="btn btn-primary">Manage Users</a></p>
+    <p><a href="../dashboard.php">← Back to Dashboard</a> | <p><a href="/users/userlist.php" class="btn btn-primary">Manage Users</a></p>
  |    <a href="../logout.php">Logout</a></p>
 
     <h2 class="mt-4">User List</h2>

@@ -3,14 +3,54 @@ session_start();
 require_once '../../app/controllers/Auth.php';
 require_once '../../config/database.php';
 
-// Restrict access to admins only
 if (!Auth::check() || !Auth::hasRole('admin')) {
     header('Location: ../login.php');
     exit;
 }
 
-// Get user list
-$stmt = $pdo->query("SELECT id, username, email, role FROM users ORDER BY id ASC");
+$perPage = 10;
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$offset = ($page - 1) * $perPage;
+
+$search = trim($_GET['search'] ?? '');
+$role = $_GET['role'] ?? '';
+
+$where = "WHERE 1";
+$params = [];
+
+// Search logic
+if ($search) {
+    $where .= " AND (username LIKE :search OR email LIKE :search)";
+    $params[':search'] = "%$search%";
+}
+
+// Role filter logic
+if ($role) {
+    $where .= " AND role = :role";
+    $params[':role'] = $role;
+}
+
+// Total filtered users
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM users $where");
+$countStmt->execute($params);
+$totalUsers = (int)$countStmt->fetchColumn();
+$totalPages = ceil($totalUsers / $perPage);
+
+// Get filtered users for page
+$params[':limit'] = $perPage;
+$params[':offset'] = $offset;
+$stmt = $pdo->prepare("SELECT id, username, email, role FROM users $where ORDER BY id ASC LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+// Bind search and role if present
+foreach ($params as $key => $value) {
+    if (!in_array($key, [':limit', ':offset'])) {
+        $stmt->bindValue($key, $value);
+    }
+}
+
+$stmt->execute();
 $users = $stmt->fetchAll();
 ?>
 
@@ -20,7 +60,23 @@ require_once '../../includes/header.php';
 ?>
 
 <h1>Manage Users</h1>
-<p><a href="index.php">← Admin Dashboard</a></p>
+<p><a href="../index.php">← Admin Dashboard</a></p>
+
+<form method="get" class="mb-3 row g-2">
+    <div class="col-sm-4">
+        <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" class="form-control" placeholder="Search by username or email">
+    </div>
+    <div class="col-sm-3">
+        <select name="role" class="form-select">
+            <option value="">All Roles</option>
+            <option value="user" <?= $role === 'user' ? 'selected' : '' ?>>User</option>
+            <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Admin</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Filter</button>
+    </div>
+</form>
 
 <table class="table table-bordered table-hover mt-3">
     <thead class="table-light">
@@ -42,8 +98,7 @@ require_once '../../includes/header.php';
                 <td>
                     <a href="edit.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
                     <?php if ($_SESSION['user_id'] != $user['id']): ?>
-                        <a href="delete.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-danger"
-                           onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                        <a href="delete.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
                     <?php else: ?>
                         <span class="text-muted">Self</span>
                     <?php endif; ?>
@@ -52,5 +107,36 @@ require_once '../../includes/header.php';
         <?php endforeach; ?>
     </tbody>
 </table>
+
+<!-- Pagination Links -->
+<?php
+// Preserve search and role in pagination links
+$queryBase = $_GET;
+unset($queryBase['page']);
+$queryStr = http_build_query($queryBase);
+$queryPrefix = $queryStr ? $queryStr . '&' : '';
+?>
+
+<nav aria-label="User pagination">
+    <ul class="pagination">
+        <?php if ($page > 1): ?>
+            <li class="page-item">
+                <a class="page-link" href="?<?= $queryPrefix ?>page=<?= $page - 1 ?>">Previous</a>
+            </li>
+        <?php endif; ?>
+
+        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+            <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                <a class="page-link" href="?<?= $queryPrefix ?>page=<?= $i ?>"><?= $i ?></a>
+            </li>
+        <?php endfor; ?>
+
+        <?php if ($page < $totalPages): ?>
+            <li class="page-item">
+                <a class="page-link" href="?<?= $queryPrefix ?>page=<?= $page + 1 ?>">Next</a>
+            </li>
+        <?php endif; ?>
+    </ul>
+</nav>
 
 <?php require_once '../../includes/footer.php'; ?>

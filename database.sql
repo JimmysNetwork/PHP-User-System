@@ -1,3 +1,5 @@
+-- SQL Data for the PHP User System. Simply import this into your database to create the tables.
+
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL,

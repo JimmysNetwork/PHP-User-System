@@ -1,49 +1,63 @@
 <?php
 session_start();
-require_once '../../app/controllers/Auth.php';
-require_once '../../config/database.php';
+require_once '../../../app/controllers/Auth.php';
+require_once '../../../config/database.php';
 
+// Only allow access if the user is an authenticated admin
 if (!Auth::check() || !Auth::hasRole('admin')) {
-    header('Location: ../login.php');
+    header('Location: ../../../login.php');
     exit;
 }
 
+// Generate CSRF token if not already set
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// Pagination setup
 $perPage = 10;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $perPage;
 
+// Get and sanitize filter inputs
 $search = trim($_GET['search'] ?? '');
 $role = $_GET['role'] ?? '';
+$allowedRoles = ['admin', 'user'];
+$role = in_array($role, $allowedRoles) ? $role : '';
 
+// Cap search length for performance
+if (strlen($search) > 100) {
+    $search = substr($search, 0, 100);
+}
+
+// Construct SQL WHERE clause based on filters
 $where = "WHERE 1";
 $params = [];
 
-// Search logic
 if ($search) {
     $where .= " AND (username LIKE :search OR email LIKE :search)";
     $params[':search'] = "%$search%";
 }
 
-// Role filter logic
 if ($role) {
     $where .= " AND role = :role";
     $params[':role'] = $role;
 }
 
-// Total filtered users
+// Get total number of filtered users
 $countStmt = $pdo->prepare("SELECT COUNT(*) FROM users $where");
 $countStmt->execute($params);
 $totalUsers = (int)$countStmt->fetchColumn();
 $totalPages = ceil($totalUsers / $perPage);
 
-// Get filtered users for page
+// Prepare paginated query
 $params[':limit'] = $perPage;
 $params[':offset'] = $offset;
 $stmt = $pdo->prepare("SELECT id, username, email, role FROM users $where ORDER BY id ASC LIMIT :limit OFFSET :offset");
 $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 
-// Bind search and role if present
+// Bind search/role filters
 foreach ($params as $key => $value) {
     if (!in_array($key, [':limit', ':offset'])) {
         $stmt->bindValue($key, $value);
@@ -56,12 +70,13 @@ $users = $stmt->fetchAll();
 
 <?php
 $pageTitle = "Manage Users";
-require_once '../../includes/header.php';
+require_once '../../../includes/header.php';
 ?>
 
 <h1>Manage Users</h1>
 <p><a href="../index.php">← Admin Dashboard</a></p>
 
+<!-- Filter/Search Form -->
 <form method="get" class="mb-3 row g-2">
     <div class="col-sm-4">
         <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" class="form-control" placeholder="Search by username or email">
@@ -78,6 +93,7 @@ require_once '../../includes/header.php';
     </div>
 </form>
 
+<!-- Users Table -->
 <table class="table table-bordered table-hover mt-3">
     <thead class="table-light">
         <tr>
@@ -98,7 +114,8 @@ require_once '../../includes/header.php';
                 <td>
                     <a href="edit.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
                     <?php if ($_SESSION['user_id'] != $user['id']): ?>
-                        <a href="delete.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                        <!-- Add CSRF token to delete link -->
+                        <a href="delete.php?id=<?= $user['id'] ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
                     <?php else: ?>
                         <span class="text-muted">Self</span>
                     <?php endif; ?>
@@ -108,9 +125,8 @@ require_once '../../includes/header.php';
     </tbody>
 </table>
 
-<!-- Pagination Links -->
+<!-- Pagination -->
 <?php
-// Preserve search and role in pagination links
 $queryBase = $_GET;
 unset($queryBase['page']);
 $queryStr = http_build_query($queryBase);
@@ -139,4 +155,4 @@ $queryPrefix = $queryStr ? $queryStr . '&' : '';
     </ul>
 </nav>
 
-<?php require_once '../../includes/footer.php'; ?>
+<?php require_once '../../../includes/footer.php'; ?>

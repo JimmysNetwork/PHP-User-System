@@ -13,6 +13,11 @@ class User {
     private string $password_hash;
 
     /**
+     * Constructor (optional but enforces OOP usage)
+     */
+    public function __construct() {}
+
+    /**
      * Find a user by their ID.
      *
      * @param int $id
@@ -40,6 +45,9 @@ class User {
      */
     public static function findByEmail($email): ?User {
         global $pdo;
+
+        // Normalize email input
+        $email = strtolower(trim($email));
 
         $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email LIMIT 1");
         $stmt->execute(['email' => $email]);

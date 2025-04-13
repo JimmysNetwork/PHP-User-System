@@ -8,7 +8,7 @@ require_once '../app/controllers/Auth.php'; // Optional if not already included
 // Redirect if user is logged in
 if (Auth::check()) {
     header('Location: dashboard.php');
-    exit;
+    exit();
 }
 
 // Generate CSRF token
@@ -25,11 +25,11 @@ if (!$token) {
     echo "<div class='alert alert-danger'>Invalid or missing token.</div>";
     echo "<a href='forgot.php' class='btn btn-secondary'>Request a New Link</a>";
     require_once '../includes/footer.php';
-    exit;
+    exit();
 }
 
 // Validate token from DB
-$stmt = $pdo->prepare("SELECT * FROM password_resets WHERE token = ? AND expires_at >= NOW()");
+$stmt = $pdo->prepare('SELECT * FROM password_resets WHERE token = ? AND expires_at >= NOW()');
 $stmt->execute([$token]);
 $reset = $stmt->fetch();
 
@@ -37,39 +37,44 @@ if (!$reset) {
     echo "<div class='alert alert-danger'>This reset link is invalid or has expired.</div>";
     echo "<a href='forgot.php' class='btn btn-secondary'>Request a New Link</a>";
     require_once '../includes/footer.php';
-    exit;
+    exit();
 }
 
 // Handle POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF check
-    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
-        $error = "Invalid CSRF token.";
+    if (
+        !isset($_POST['csrf_token']) ||
+        !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])
+    ) {
+        $error = 'Invalid CSRF token.';
     } else {
         $password = $_POST['password'] ?? '';
         $confirm = $_POST['confirm_password'] ?? '';
 
         if (!$password || !$confirm) {
-            $error = "Please enter and confirm your new password.";
+            $error = 'Please enter and confirm your new password.';
         } elseif ($password !== $confirm) {
-            $error = "Passwords do not match.";
+            $error = 'Passwords do not match.';
         } elseif (strlen($password) < 8) {
-            $error = "Password must be at least 8 characters.";
+            $error = 'Password must be at least 8 characters.';
         } else {
             // Update user password
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            $update = $pdo->prepare("UPDATE users SET password_hash = ? WHERE email = ?");
+            $update = $pdo->prepare('UPDATE users SET password_hash = ? WHERE email = ?');
             $update->execute([$hash, $reset['email']]);
 
             // Remove the reset token
-            $pdo->prepare("DELETE FROM password_resets WHERE email = ?")->execute([$reset['email']]);
+            $pdo->prepare('DELETE FROM password_resets WHERE email = ?')->execute([
+                $reset['email'],
+            ]);
 
             // Invalidate token and CSRF token
             unset($_SESSION['csrf_token']);
 
             Flash::set('success', 'Your password has been reset. You can now log in.');
             header('Location: login.php');
-            exit;
+            exit();
         }
     }
 }

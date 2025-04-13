@@ -7,7 +7,7 @@ require_once '../app/controllers/Auth.php'; // Ensure Auth is available
 // Redirect logged-in users to dashboard
 if (Auth::check()) {
     header('Location: dashboard.php');
-    exit;
+    exit();
 }
 
 // Generate CSRF token if not already set
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Please enter a valid email address.';
         } else {
             // Check if a user with this email exists
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt = $pdo->prepare('SELECT * FROM users WHERE email = ?');
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
@@ -43,10 +43,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $expires = date('Y-m-d H:i:s', time() + 3600); // 1 hour expiry
 
             // Remove any existing password reset requests for this email
-            $pdo->prepare("DELETE FROM password_resets WHERE email = ?")->execute([$email]);
+            $pdo->prepare('DELETE FROM password_resets WHERE email = ?')->execute([$email]);
 
             // Insert new password reset entry
-            $insert = $pdo->prepare("INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)");
+            $insert = $pdo->prepare(
+                'INSERT INTO password_resets (email, token, expires_at) VALUES (?, ?, ?)'
+            );
             $insert->execute([$email, $token, $expires]);
 
             // Construct reset URL dynamically based on server
@@ -54,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $resetLink = "$baseURL/reset.php?token=$token";
 
             // TODO: Replace with PHPMailer, Mailgun, etc. in production
-            mail($email, "Password Reset", "Click here to reset your password: $resetLink");
+            mail($email, 'Password Reset', "Click here to reset your password: $resetLink");
 
             // Always show success message — no email enumeration
             $success = 'If your email is registered, a password reset link has been sent.';

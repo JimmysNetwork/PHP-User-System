@@ -6,23 +6,23 @@ require_once '../../../config/database.php';
 // Ensure user is logged in and has admin access
 if (!Auth::check() || !Auth::hasRole('admin')) {
     header('Location: ../../../login.php');
-    exit;
+    exit();
 }
 
 // Sanitize and validate user ID
-$id = isset($_GET['id']) ? (int)$_GET['id'] : null;
+$id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 if (!$id) {
     header('Location: userlist.php');
-    exit;
+    exit();
 }
 
 // Fetch user by ID
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
 $stmt->execute([$id]);
 $user = $stmt->fetch();
 if (!$user) {
     header('Location: userlist.php');
-    exit;
+    exit();
 }
 
 // Initialize feedback variables
@@ -37,7 +37,10 @@ if (empty($_SESSION['csrf_token'])) {
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF validation
-    if (empty($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    if (
+        empty($_POST['csrf_token']) ||
+        !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])
+    ) {
         $error = 'Invalid CSRF token.';
     } else {
         $username = trim($_POST['username'] ?? '');
@@ -48,14 +51,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$username || !$email) {
             $error = 'Username and email are required.';
         } elseif (!preg_match('/^[a-zA-Z0-9_]{3,30}$/', $username)) {
-            $error = 'Username must be 3–30 characters and contain only letters, numbers, or underscores.';
+            $error =
+                'Username must be 3–30 characters and contain only letters, numbers, or underscores.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'Invalid email format.';
         } elseif ($_SESSION['user_id'] == $id && $role !== $user['role']) {
             $error = 'You cannot change your own role.';
         } else {
             // Perform update
-            $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, role = ? WHERE id = ?");
+            $stmt = $pdo->prepare(
+                'UPDATE users SET username = ?, email = ?, role = ? WHERE id = ?'
+            );
             $stmt->execute([$username, $email, $role, $id]);
 
             $success = 'User updated successfully.';
@@ -66,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <?php
-$pageTitle = "Edit User";
+$pageTitle = 'Edit User';
 require_once '../../../includes/header.php';
 ?>
 
@@ -85,12 +91,16 @@ require_once '../../../includes/header.php';
 
     <div class="mb-3">
         <label>Username</label>
-        <input type="text" name="username" class="form-control" value="<?= htmlspecialchars($user['username']) ?>" required>
+        <input type="text" name="username" class="form-control" value="<?= htmlspecialchars(
+            $user['username']
+        ) ?>" required>
     </div>
 
     <div class="mb-3">
         <label>Email</label>
-        <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required>
+        <input type="email" name="email" class="form-control" value="<?= htmlspecialchars(
+            $user['email']
+        ) ?>" required>
     </div>
 
     <div class="mb-3">

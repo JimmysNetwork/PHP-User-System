@@ -5,12 +5,12 @@ require_once '../../config/database.php';
 
 // Only allow admins
 if (!Auth::check() || !Auth::hasRole('admin')) {
-    header("Location: ../login.php");
-    exit;
+    header('Location: ../login.php');
+    exit();
 }
 
 // Fetch all users
-$stmt = $pdo->query("SELECT id, username, email, role FROM users ORDER BY id ASC");
+$stmt = $pdo->query('SELECT id, username, email, role FROM users ORDER BY id ASC');
 $users = $stmt->fetchAll();
 ?>
 

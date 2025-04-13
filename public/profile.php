@@ -7,7 +7,7 @@ require_once '../includes/header.php';
 // Only allow access if the user is logged in
 if (!Auth::check()) {
     header('Location: login.php');
-    exit;
+    exit();
 }
 
 // Generate CSRF token if missing
@@ -22,7 +22,10 @@ $success = '';
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF token validation
-    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    if (
+        !isset($_POST['csrf_token']) ||
+        !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])
+    ) {
         $error = 'Invalid CSRF token.';
     } else {
         // Sanitize and limit input length
@@ -35,20 +38,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$username || !$email) {
             $error = 'Username and email are required.';
         } elseif (!preg_match('/^[a-zA-Z0-9_]{3,30}$/', $username)) {
-            $error = 'Username must be 3–30 characters and only contain letters, numbers, or underscores.';
+            $error =
+                'Username must be 3–30 characters and only contain letters, numbers, or underscores.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'Invalid email format.';
         } elseif ($password && $password !== $confirm) {
             $error = 'Passwords do not match.';
         } else {
             // Check for email conflict with another user
-            $check = $pdo->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+            $check = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
             $check->execute([$email, $user->id]);
             if ($check->fetch()) {
                 $error = 'That email is already in use by another account.';
             } else {
                 // Build dynamic SQL query with optional password update
-                $query = "UPDATE users SET username = ?, email = ?" . ($password ? ", password_hash = ?" : "") . " WHERE id = ?";
+                $query =
+                    'UPDATE users SET username = ?, email = ?' .
+                    ($password ? ', password_hash = ?' : '') .
+                    ' WHERE id = ?';
                 $stmt = $pdo->prepare($query);
 
                 // Bind parameters
@@ -90,12 +97,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="mb-3">
             <label class="form-label">Username:</label>
-            <input type="text" name="username" value="<?= htmlspecialchars($user->username) ?>" class="form-control" required>
+            <input type="text" name="username" value="<?= htmlspecialchars(
+                $user->username
+            ) ?>" class="form-control" required>
         </div>
 
         <div class="mb-3">
             <label class="form-label">Email:</label>
-            <input type="email" name="email" value="<?= htmlspecialchars($user->email) ?>" class="form-control" required>
+            <input type="email" name="email" value="<?= htmlspecialchars(
+                $user->email
+            ) ?>" class="form-control" required>
         </div>
 
         <div class="mb-3">

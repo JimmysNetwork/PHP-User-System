@@ -1,0 +1,20 @@
+{
+    "name": "php-user-system",
+    "version": "1.0.0",
+    "description": "A clean, modern PHP user authentication system built using Object-Oriented Programming (OOP). Designed as a reusable base for any PHP-based website requiring user management, roles, and admin tools.",
+    "main": "index.js",
+    "directories": {
+        "doc": "docs"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "format": "prettier --plugin=@prettier/plugin-php --write '**/*.{php,js,css,html,json,md}'"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@prettier/plugin-php": "^0.22.4",
+        "prettier": "^3.5.3"
+    }
+}

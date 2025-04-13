@@ -98,6 +98,14 @@ A clean, modern PHP user authentication system built using Object-Oriented Progr
 3. Update `/config/database.php` with your database credentials.
 4. Start your local server or deploy to a PHP-supported host.
 
+---
+
+### Notes
+
+I have tested all of the code - everything is working as intended. If you come across any bugs please open an issue. I will continue to update this system with more features, etc. I hope everyone enjoys using it for projects.
+
+---
+
 ## 📄 License
 
 MIT License — free to use and modify for personal or commercial projects.

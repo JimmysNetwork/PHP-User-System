@@ -12,7 +12,7 @@ if (empty($_SESSION['csrf_token'])) {
 // Redirect if already logged in
 if (Auth::check()) {
     header('Location: dashboard.php');
-    exit;
+    exit();
 }
 
 $error = '';
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$error) {
 
             Flash::set('success', 'Logged in successfully.');
             header('Location: dashboard.php');
-            exit;
+            exit();
         } else {
             // Failed login: store timestamp of this attempt
             $_SESSION['login_attempts'][$ip][] = time();

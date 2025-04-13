@@ -25,9 +25,9 @@ A clean, modern PHP user authentication system built using Object-Oriented Progr
 ### ✅ User Profile
 
 - Logged-in users can update their:
-  - Username
-  - Email
-  - Password (optional)
+    - Username
+    - Email
+    - Password (optional)
 - Input validation and secure update logic
 
 ### ✅ Password Reset System

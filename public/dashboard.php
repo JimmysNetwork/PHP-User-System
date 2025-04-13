@@ -6,7 +6,7 @@ require_once '../includes/header.php';
 // Restrict access to logged-in users only
 if (!Auth::check()) {
     header('Location: login.php');
-    exit;
+    exit();
 }
 
 $user = Auth::user();

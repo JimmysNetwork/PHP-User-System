@@ -7,4 +7,4 @@ Auth::logout();
 
 // Redirect to homepage or login
 header('Location: login.php');
-exit;
+exit();

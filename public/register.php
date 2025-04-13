@@ -26,27 +26,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$username || !$email || !$password || !$confirm) {
             $error = 'All fields are required.';
         } elseif (!preg_match('/^[a-zA-Z0-9_]{3,30}$/', $username)) {
-            $error = 'Username must be 3–30 characters and only contain letters, numbers, or underscores.';
+            $error =
+                'Username must be 3–30 characters and only contain letters, numbers, or underscores.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'Invalid email format.';
         } elseif ($password !== $confirm) {
             $error = 'Passwords do not match.';
         } else {
             // Check for existing email (optional)
-            $check = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $check = $pdo->prepare('SELECT id FROM users WHERE email = ?');
             $check->execute([$email]);
             if ($check->fetch()) {
                 $error = 'Email already exists.';
             } else {
                 // Hash password and insert user
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, 'user')");
+                $stmt = $pdo->prepare(
+                    "INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, 'user')"
+                );
 
                 try {
                     $stmt->execute([$username, $email, $password_hash]);
                     Flash::set('success', 'Account created. Please login.');
                     header('Location: login.php');
-                    exit;
+                    exit();
                 } catch (PDOException $e) {
                     $error = 'Error: ' . $e->getMessage();
                 }

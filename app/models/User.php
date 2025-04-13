@@ -5,7 +5,8 @@ require_once __DIR__ . '/../../config/database.php';
  * User model
  * Handles user-related operations such as finding users and verifying passwords.
  */
-class User {
+class User
+{
     public int $id;
     public string $username;
     public string $email;
@@ -23,10 +24,11 @@ class User {
      * @param int $id
      * @return User|null
      */
-    public static function findById($id): ?User {
+    public static function findById($id): ?User
+    {
         global $pdo;
 
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = :id LIMIT 1");
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE id = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
         $data = $stmt->fetch();
 
@@ -43,13 +45,14 @@ class User {
      * @param string $email
      * @return User|null
      */
-    public static function findByEmail($email): ?User {
+    public static function findByEmail($email): ?User
+    {
         global $pdo;
 
         // Normalize email input
         $email = strtolower(trim($email));
 
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email LIMIT 1");
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE email = :email LIMIT 1');
         $stmt->execute(['email' => $email]);
         $data = $stmt->fetch();
 
@@ -66,7 +69,8 @@ class User {
      * @param string $password
      * @return bool
      */
-    public function verifyPassword(string $password): bool {
+    public function verifyPassword(string $password): bool
+    {
         return password_verify($password, $this->password_hash);
     }
 
@@ -76,9 +80,10 @@ class User {
      * @param array $data
      * @return User
      */
-    private static function mapDataToUser(array $data): User {
+    private static function mapDataToUser(array $data): User
+    {
         $user = new User();
-        $user->id = (int)$data['id'];
+        $user->id = (int) $data['id'];
         $user->username = $data['username'];
         $user->email = $data['email'];
         $user->role = $data['role'];

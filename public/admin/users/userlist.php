@@ -6,7 +6,7 @@ require_once '../../../config/database.php';
 // Only allow access if the user is an authenticated admin
 if (!Auth::check() || !Auth::hasRole('admin')) {
     header('Location: ../../../login.php');
-    exit;
+    exit();
 }
 
 // Generate CSRF token if not already set
@@ -16,7 +16,7 @@ if (empty($_SESSION['csrf_token'])) {
 
 // Pagination setup
 $perPage = 10;
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 $offset = ($page - 1) * $perPage;
 
 // Get and sanitize filter inputs
@@ -31,29 +31,31 @@ if (strlen($search) > 100) {
 }
 
 // Construct SQL WHERE clause based on filters
-$where = "WHERE 1";
+$where = 'WHERE 1';
 $params = [];
 
 if ($search) {
-    $where .= " AND (username LIKE :search OR email LIKE :search)";
+    $where .= ' AND (username LIKE :search OR email LIKE :search)';
     $params[':search'] = "%$search%";
 }
 
 if ($role) {
-    $where .= " AND role = :role";
+    $where .= ' AND role = :role';
     $params[':role'] = $role;
 }
 
 // Get total number of filtered users
 $countStmt = $pdo->prepare("SELECT COUNT(*) FROM users $where");
 $countStmt->execute($params);
-$totalUsers = (int)$countStmt->fetchColumn();
+$totalUsers = (int) $countStmt->fetchColumn();
 $totalPages = ceil($totalUsers / $perPage);
 
 // Prepare paginated query
 $params[':limit'] = $perPage;
 $params[':offset'] = $offset;
-$stmt = $pdo->prepare("SELECT id, username, email, role FROM users $where ORDER BY id ASC LIMIT :limit OFFSET :offset");
+$stmt = $pdo->prepare(
+    "SELECT id, username, email, role FROM users $where ORDER BY id ASC LIMIT :limit OFFSET :offset"
+);
 $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
 stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 
@@ -69,7 +71,7 @@ $users = $stmt->fetchAll();
 ?>
 
 <?php
-$pageTitle = "Manage Users";
+$pageTitle = 'Manage Users';
 require_once '../../../includes/header.php';
 ?>
 
@@ -79,7 +81,9 @@ require_once '../../../includes/header.php';
 <!-- Filter/Search Form -->
 <form method="get" class="mb-3 row g-2">
     <div class="col-sm-4">
-        <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" class="form-control" placeholder="Search by username or email">
+        <input type="text" name="search" value="<?= htmlspecialchars(
+            $search
+        ) ?>" class="form-control" placeholder="Search by username or email">
     </div>
     <div class="col-sm-3">
         <select name="role" class="form-select">
@@ -115,7 +119,9 @@ require_once '../../../includes/header.php';
                     <a href="edit.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
                     <?php if ($_SESSION['user_id'] != $user['id']): ?>
                         <!-- Add CSRF token to delete link -->
-                        <a href="delete.php?id=<?= $user['id'] ?>&csrf_token=<?= $_SESSION['csrf_token'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+                        <a href="delete.php?id=<?= $user['id'] ?>&csrf_token=<?= $_SESSION[
+    'csrf_token'
+] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
                     <?php else: ?>
                         <span class="text-muted">Self</span>
                     <?php endif; ?>
